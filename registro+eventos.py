@@ -11,7 +11,7 @@ from PyQt5.QtGui import QFont
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-# --- CONFIGURACIÓN UDP ---
+
 UDP_IP = "0.0.0.0"
 UDP_PORT = 3333
 
@@ -70,7 +70,7 @@ class MonitorVital(QMainWindow):
         self.data_buffer = deque([0]*200, maxlen=200)
         self.is_recording = False
         self.file_handle = None
-        self.alarma_activa = False # Para no saturar el log de alarmas
+        self.alarma_activa = False 
         
         self.initUI()
         self.init_worker()
@@ -80,7 +80,6 @@ class MonitorVital(QMainWindow):
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
 
-        # Gráfica
         plot_layout = QVBoxLayout()
         self.fig = Figure(figsize=(5, 4), dpi=100, facecolor='#121212')
         self.ax = self.fig.add_subplot(111)
@@ -94,14 +93,12 @@ class MonitorVital(QMainWindow):
         self.canvas = FigureCanvas(self.fig)
         plot_layout.addWidget(self.canvas)
 
-        # Panel Derecho
         stats_layout = QVBoxLayout()
         self.lbl_hr = self.crear_panel_dato("FRECUENCIA CARDIACA", "BPM", "#FF3333")
         stats_layout.addWidget(self.lbl_hr)
         self.lbl_spo2 = self.crear_panel_dato("SATURACIÓN O2", "%", "#3399FF")
         stats_layout.addWidget(self.lbl_spo2)
 
-        # Controles
         control_frame = QFrame()
         control_frame.setStyleSheet("border: 1px solid #333333; border-radius: 5px; margin: 10px; padding: 5px;")
         control_layout = QVBoxLayout(control_frame)
@@ -158,7 +155,6 @@ class MonitorVital(QMainWindow):
         self.worker.sig_stats.connect(self.actualizar_stats)
         self.worker.start()
 
-    # --- NUEVO: FUNCIÓN UNIVERSAL DE LOGS ---
     def escribir_log(self, tipo, mensaje, valor=""):
         """Escribe una línea en el archivo si estamos grabando"""
         if self.is_recording and self.file_handle:
@@ -168,7 +164,6 @@ class MonitorVital(QMainWindow):
 
     def toggle_recording(self):
         if not self.is_recording:
-            # INICIO
             nombre = self.input_nombre.text().strip() or "Anonimo"
             edad = self.input_edad.text().strip() or "?"
             timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -176,7 +171,6 @@ class MonitorVital(QMainWindow):
             
             try:
                 self.file_handle = open(filename, "w")
-                # Cabecera de Historial
                 self.file_handle.write("=== LOG DE SISTEMA DE TELEMETRIA ===\n")
                 self.file_handle.write(f"PACIENTE: {nombre} | EDAD: {edad}\n")
                 self.file_handle.write(f"INICIO SESION: {datetime.datetime.now()}\n")
@@ -184,7 +178,7 @@ class MonitorVital(QMainWindow):
                 self.file_handle.write("TIMESTAMP,TIPO,DETALLE,VALOR\n")
                 
                 self.is_recording = True
-                self.escribir_log("SISTEMA", "INICIO DE GRABACION", "") # Log de evento
+                self.escribir_log("SISTEMA", "INICIO DE GRABACION", "")
                 
                 self.btn_record.setText("DETENER REGISTRO")
                 self.btn_record.setStyleSheet("background-color: #AA0000; color: white; padding: 10px; border-radius: 5px;")
@@ -196,8 +190,7 @@ class MonitorVital(QMainWindow):
             except Exception as e:
                 self.lbl_estado.setText(f"Error Disco: {e}")
         else:
-            # FIN
-            self.escribir_log("SISTEMA", "FIN DE GRABACION", "") # Log de evento
+            self.escribir_log("SISTEMA", "FIN DE GRABACION", "") 
             if self.file_handle:
                 self.file_handle.close()
                 self.file_handle = None
@@ -216,14 +209,12 @@ class MonitorVital(QMainWindow):
         self.ax.set_xlim(0, len(self.data_buffer))
         self.canvas.draw_idle()
         
-        # Log de Datos Crudos
         self.escribir_log("ECG", "Muestra", f"{valor:.2f}")
 
     def actualizar_stats(self, spo2, hr):
         self.lbl_spo2.valor_label.setText(str(spo2))
         self.lbl_hr.valor_label.setText(str(hr))
         
-        # Lógica de Alarmas y Logs de Eventos
         if spo2 < 90 and spo2 > 0:
             self.lbl_spo2.setStyleSheet("border: 2px solid red; background-color: #330000; margin: 10px;")
             if not self.alarma_activa:
@@ -235,7 +226,6 @@ class MonitorVital(QMainWindow):
                  self.escribir_log("INFO", "NIVEL O2 NORMALIZADO", str(spo2))
                  self.alarma_activa = False
             
-        # Log de Datos Vitales
         self.escribir_log("VITALES", "SPO2/HR", f"{spo2}/{hr}")
 
     def closeEvent(self, event):

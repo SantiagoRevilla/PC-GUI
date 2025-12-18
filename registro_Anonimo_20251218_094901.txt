@@ -1,0 +1,7 @@
+========================================
+REGISTRO DE SIGNOS VITALES
+FECHA: 2025-12-18 09:49:01.054164
+PACIENTE: Anonimo
+EDAD: 
+========================================
+TIMESTAMP,TIPO_DATO,VALOR1,VALOR2
